@@ -19,5 +19,6 @@ async def start_handler(message: types.Message, db: Database, translator: Locali
 
     await message.answer(
         f"Assalomu aleykum {message.from_user.first_name}, Alola botiga hush kelibsiz!",
-        reply_markup=common.show_keyboard()
+        reply_markup=common.show_keyboard(),
+        parse_mode=None
     )
