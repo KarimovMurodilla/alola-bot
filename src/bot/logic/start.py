@@ -77,7 +77,6 @@ async def check_data_handler(message: types.Message):
         product_count = sum([data['count'] for data in product['colors']])
 
         result += name
-        result += amount
         result += f"Цвет и количество:\n{colors}"
         result += f"Общее количество: {product_count}\n"
         result += amount
