@@ -87,8 +87,10 @@ class Configuration:
     SECRET_KEY: str = getenv('SECRET_KEY')
     ADMIN_LOGIN = getenv('ADMIN_LOGIN')
     ADMIN_PASSWORD = getenv('ADMIN_PASSWORD')
+    CHAT_ID = getenv('CHAT_ID')
 
-    BILLZ_API_KEY = getenv('BILLZ_SECRET_KEY')
+    BILLZ_SECRET_KEY = getenv('BILLZ_SECRET_KEY')
+    BILLZ_API_KEY = getenv('BILLZ_API_KEY')
     
 
 conf = Configuration()

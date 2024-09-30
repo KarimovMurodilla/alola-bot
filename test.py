@@ -1,43 +1,52 @@
-import hmac
-import hashlib
-import base64
-import json
-import time
+"""
+Result should be:
 
-# Function to encode in Base64URL without padding
-def base64url_encode(data):
-    return base64.urlsafe_b64encode(data).rstrip(b'=').decode('utf-8')
+Заказ - #1234
+Наименование товара: Sumka 6095
+Цвет и количество:
+• Oq - 2
+• Qora - 1
+Общее количество: 3
+Общая сумма: 500000
+"""
 
-# Secret key
-secret = ""
+all_data = [
+    {
+        "order_id": "d1135hhd-tgw652-hdyy6286d-86hhsf6202",
+        "products": [
+            {
+                "parent_id": "7hsgyyr-uhsgahbd-83hs7h-y2sbhye",
+                "name": "Sumka 6095",
+                "amount": 500000,
+                "colors": [
+                    {
+                        "product_id": "34d12342-1762535-jhg727-bdy3y32",
+                        "color": "oq",
+                        "count": 2
+                    },
+                    {
+                        "product_id": "8366273-1762535-jhg727-bdy3y32",
+                        "color": "qora",
+                        "count": 1
+                    }
+                ]
+            }
+        ]
+    }
+]
 
-# JWT Header and Payload
-header = {
-    "typ": "JWT",
-    "alg": "HS256"
-}
-payload = {
-    "iss": "alola.uzvip.uz",
-    "iat": int(time.time()),
-    "exp": 1738553677,
-    "sub": "shop_bot"
-}
+result = "Заказ - #1234\n\n"
 
-# Encode header and payload in Base64URL
-encoded_header = base64url_encode(json.dumps(header).encode())
-encoded_payload = base64url_encode(json.dumps(payload).encode())
+for product in all_data[0]['products']:
+    name = f"Наименование товара: {product['name']}\n"
+    amount = f"Общая сумма: {product['amount']}\n"
+    colors = "".join([f"• {data['color']} - {data['count']}\n" for data in product['colors']])
+    product_count = sum([data['count'] for data in product['colors']])
 
-# Create the unsigned token (header + '.' + payload)
-unsigned_token = f"{encoded_header}.{encoded_payload}"
+    result += name
+    result += amount
+    result += f"Цвет и количество:\n{colors}"
+    result += f"Общее количество: {product_count}\n"
+    result += f"Общая сумма: {amount}\n\n"
 
-# Create the signature using HMAC-SHA256
-signature = hmac.new(secret.encode(), unsigned_token.encode(), hashlib.sha256).digest()
-
-# Base64URL encode the signature
-encoded_signature = base64url_encode(signature)
-
-# Form the final JWT token
-token = f"{unsigned_token}.{encoded_signature}"
-
-# Output the token
-print(token)
+print(result)
