@@ -66,6 +66,7 @@ async def start_handler(message: types.Message, db: Database, translator: Locali
 @start_router.message(IsWebAppData())
 async def check_data_handler(message: types.Message):
     data = json.loads(message.web_app_data.data)
+    # print("data:", data)
     billz = BillzAPI()
 
     result = "Заказ - #1234\n\n"

@@ -99,9 +99,10 @@ class BillzAPI:
 
         async with aiohttp.ClientSession(headers=self.headers) as session:
             async with session.post(url, json=payload) as response:
-                if response.status != 200:
-                    access_token = await self.login()
-                    self.headers['Authorization'] = f"Bearer {access_token}"
+                # print(await response.text())
+                # if response.status != 200:
+                #     access_token = await self.login()
+                #     self.headers['Authorization'] = f"Bearer {access_token}"
 
                 # response = await self.post(url, payload)
                 data = await response.json()  # Parse JSON response
