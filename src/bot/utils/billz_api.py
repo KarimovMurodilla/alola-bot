@@ -82,9 +82,10 @@ class BillzAPI:
                     access_token = await self.login()
                     self.headers['Authorization'] = f"Bearer {access_token}"
 
-                # response = await self.get(url)
-                data = await response.json()
-                return data
+                data: dict = await response.json()
+
+                if data.get('clients'):
+                    return data.get('clients')[0]
             
     async def add_item(self, order_id: str, product_id: str, count: int):
         url = 'https://api-admin.billz.ai/v1/orders'
@@ -105,5 +106,26 @@ class BillzAPI:
                 #     self.headers['Authorization'] = f"Bearer {access_token}"
 
                 # response = await self.post(url, payload)
+                data = await response.json()  # Parse JSON response
+                return data
+
+    async def make_payment(self, order_id: str, total_amount: int):
+        url = 'https://api-admin.billz.ai/v1/orders'
+        payload = {
+            "method": "order.make_payment",
+            "params": {
+                "payments": [
+                    {
+                        "id": "61f8f3f8-979e-4316-b830-b01482121429",
+                        "company_payment_type_id": "e506cdb9-eddc-4ada-9ba6-b124fba2f917", # static
+                        "paid_amount": total_amount
+                    }
+                ],
+                "order_id": order_id
+            }
+        }
+
+        async with aiohttp.ClientSession(headers=self.headers) as session:
+            async with session.post(url, json=payload) as response:
                 data = await response.json()  # Parse JSON response
                 return data

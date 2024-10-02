@@ -25,9 +25,10 @@ def send_contact():
 
     return keyboard
 
-def show_approve_btn(order_id: str):
+def show_approve_btn(order_id: str, total_amount: str):
     kb = [
-        [types.InlineKeyboardButton(text="✅ Подтвердить", callback_data=order_id)],
+        [types.InlineKeyboardButton(text="❌ Отменить", callback_data='cancel'),
+        types.InlineKeyboardButton(text="✅ Подтвердить", callback_data=f"{order_id},{total_amount}")],
     ]
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
 
