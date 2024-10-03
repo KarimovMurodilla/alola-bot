@@ -33,3 +33,22 @@ def show_approve_btn(order_id: str, total_amount: str):
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
 
     return keyboard
+
+def show_admin_buttons():
+    kb = [
+        [types.KeyboardButton(text="Добавить клиента", request_users=types.KeyboardButtonRequestUsers(
+            request_id=1, user_is_bot=False, request_username=True, request_name=True, max_quantity=10
+        ))],
+        [types.KeyboardButton(text="Рассылка")],
+    ]
+    keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+
+    return keyboard
+
+def cancel():
+    kb = [
+        [types.KeyboardButton(text="Завершить")],
+    ]
+    keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+
+    return keyboard

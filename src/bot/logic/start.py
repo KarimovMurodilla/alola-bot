@@ -12,13 +12,14 @@ from src.language.translator import LocalizedTranslator
 from src.bot.structures.keyboards import common
 from src.bot.structures.fsm.registration import RegisterGroup
 from src.bot.filters.web_app_data_filter import IsWebAppData
+from src.bot.filters.client_filter import ClientFilter
 from src.configuration import conf
 from src.bot.utils.billz_api import BillzAPI
 
 start_router = Router(name='start')
 
 
-@start_router.message(CommandStart())
+@start_router.message(CommandStart(), ClientFilter())
 async def start_handler(message: types.Message, state: FSMContext):
     """Start command handler."""
     await state.clear()
@@ -63,44 +64,62 @@ async def get_phone_number(message: types.Message, state: FSMContext):
 
     await state.clear()
 
-@start_router.message(IsWebAppData())
+@start_router.message(IsWebAppData(), ClientFilter())
 async def check_data_handler(message: types.Message):
     data = json.loads(message.web_app_data.data)
+    
     billz = BillzAPI()
-
     client = await billz.get_user(message.from_user.id)
+
     result = ""
+    client_result = ""
     status = "Статус: 🟡 Проверяется\n\n"
     client_data = f"Клиент:\n- Имя: {client['first_name']}\n- Телефон: {client['phone_numbers'][0]}\n\n"
+
+    msg1 = "Ваш заказ отправлен на проверку\n\n"
+    details = "Детали заказа:\n"
 
     result += status
     result += client_data
 
+    client_result += msg1
+    client_result += details
+
     total_amount = 0
+    total_count = 0
 
     for product in data['products']:
         colors = "".join([f"• {data['color']} - {data['count']}\n" for data in product['colors']])
         product_count = sum([data['count'] for data in product['colors']])
-        formatted_price = f"{product['amount']:,}".replace(",", " ")
 
-        result += f"Наименование товара: {product['product_name']}\n"
-        result += f"Цвет и количество:\n{colors}"
-        result += f"Общее количество: {product_count}\n"
-        result += f"Общая сумма: {formatted_price}\n\n"
+        result += f"{product['product_name']}\n"
+        result += f"{colors}\n"
+
+        client_result += f"{product['product_name']}\n"
+        client_result += f"{colors}\n"
+
         total_amount += product['amount']
+        total_count += product_count
 
         for i in product['colors']:
             await billz.add_item(data['order_id'], i['product_id'], i['count'])
+
+    formatted_price = f"{total_amount:,}".replace(",", " ")
+    result += f"Общее количество: {total_count}\n"
+    result += f"Общая сумма: {formatted_price}"
+
+    client_result += f"Общее количество: {total_count}\n"
+    client_result += f"Общая сумма: {formatted_price}"
 
     await message.bot.send_message(
         chat_id=conf.CHAT_ID,  
         text=result,
         reply_markup=common.show_approve_btn(order_id=data['order_id'], total_amount=total_amount)
     )
-    await message.answer(f"Sizning buyurtmangiz qabul qilindi ✅")
+    await message.answer(client_result)
     
 
-@start_router.callback_query()
+@start_router.callback_query(ClientFilter())
 async def order_complete(c: types.CallbackQuery):    
     if c.data == 'cancel':
         old_text = c.message.text

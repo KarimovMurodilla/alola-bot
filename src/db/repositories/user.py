@@ -49,7 +49,15 @@ class UserRepo(Repository[User]):
         await self.session.commit()
 
     async def get_me(self, user_id: int) -> User:
-        """Get user role by id."""
+        """Get user by user_id."""
         return await self.session.scalar(
             select(User).where(User.user_id == user_id).limit(1)
         )
+
+    async def get_all_users(self):
+        """Get all users."""
+        result = await self.session.scalars(
+            select(User)
+        )
+        users = result.all()
+        return users
