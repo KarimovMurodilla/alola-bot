@@ -26,12 +26,12 @@ services:
       - .env.prod
     restart: always
     depends_on:
-      - db
+      - db-alola
       - redis
   # admin:
   #   <<: *bot
   #   depends_on:
-  #     - db
+  #     - db-alola
   #     - redis
   #   ports:
   #     - "8200:8000"
