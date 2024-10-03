@@ -9,7 +9,7 @@ services:
     restart: on-failure
     ports:
       - "6380:6378"
-  db:
+  db-alola:
     image: postgres:15-alpine
     env_file:
       - .env.prod
