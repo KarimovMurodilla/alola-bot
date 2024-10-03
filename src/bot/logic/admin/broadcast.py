@@ -13,7 +13,9 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger('broadcast')
 
 bot = Bot(token=conf.bot.token)
-engine = create_async_engine(url=conf.db.build_connection_str())
+engine = create_async_engine(
+    url=conf.db.build_connection_str()
+)
 
 
 async def get_users():

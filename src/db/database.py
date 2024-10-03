@@ -17,7 +17,7 @@ def create_async_engine(url: URL | str) -> AsyncEngine:
     :param url: URL to connect
     :return: AsyncEngine
     """
-    return _create_async_engine(url=url, echo=conf.debug, pool_pre_ping=True)
+    return _create_async_engine(url=url, echo=conf.debug, pool_pre_ping=True, connect_args={"prepared_statement_cache_size": 0})
 
 
 class Database:
