@@ -17,7 +17,7 @@ async def process_registration(
     db: Database
 ):
     await message.answer(
-        "Добро пожаловать на админ панель!",
+        "Добро пожаловать в админ-панель!",
         reply_markup=common.show_admin_buttons()
     )
 
