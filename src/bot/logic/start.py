@@ -41,6 +41,12 @@ async def start_handler(message: types.Message, state: FSMContext):
             reply_markup=common.show_keyboard(user_id=message.from_user.id),
             parse_mode=None
         )
+        await message.bot.set_chat_menu_button(
+            chat_id=message.from_user.id, 
+            menu_button=types.MenuButtonWebApp(text="Do'kon", web_app=types.WebAppInfo(
+                url=f'https://alolabot-web.vercel.app/{message.from_user.id}'
+            ))
+        )
 
 
 @start_router.message(F.contact, RegisterGroup.phone_number)
@@ -71,6 +77,7 @@ async def get_phone_number(message: types.Message, state: FSMContext):
     )
 
     await state.clear()
+
 
 @start_router.message(IsWebAppData(), ClientFilter())
 async def check_data_handler(message: types.Message):
