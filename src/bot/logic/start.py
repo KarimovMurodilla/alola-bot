@@ -130,8 +130,8 @@ async def check_data_handler(message: types.Message):
         chat_id=conf.CHAT_ID,  
         text=result,
         reply_markup=common.show_approve_btn(order_id=data['order_id'], total_amount=total_amount)
-    )
-    await message.answer(client_result)
+    ) # Gruppaga boradigani
+    await message.answer(client_result) # Klientga boradigani
     
 
 @start_router.callback_query(ClientFilter())
@@ -147,7 +147,7 @@ async def order_complete(c: types.CallbackQuery):
         total_amount = int(data[1])
 
         billz = BillzAPI()
-        await billz.make_payment(order_id, total_amount)
+        # await billz.make_payment(order_id, total_amount)
         old_text = c.message.text
         new_text = old_text.replace('🟡 Проверяется', '🟢 Подтверждён')
         await c.message.edit_text(new_text, reply_markup=None)
