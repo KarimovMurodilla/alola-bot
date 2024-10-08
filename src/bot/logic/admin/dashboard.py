@@ -3,14 +3,13 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from src.db.database import Database
-from src.bot.filters.admin_filter import AdminFilter
 from src.bot.structures.keyboards import common
 from src.bot.structures.fsm.admin_states import AdminStatesGroup
 from .router import admin_router
-from .broadcast import broadcaster
+from .broadcast import broadcaster, cleaner
 
 
-@admin_router.message(F.text=='/admin', AdminFilter())
+@admin_router.message(F.text=='/admin')
 async def process_registration(
     message: Message, 
     state: FSMContext,
@@ -22,7 +21,7 @@ async def process_registration(
     )
 
 
-@admin_router.message(F.users_shared, AdminFilter())
+@admin_router.message(F.users_shared)
 async def process_registration(
     message: Message, 
     state: FSMContext, 
@@ -38,7 +37,7 @@ async def process_registration(
     await message.answer("Клиенты добавлены в базу! Теперь они могут пользоваться ботом ✅")
 
 
-@admin_router.message(F.text=='Завершить', AdminFilter())
+@admin_router.message(F.text=='Завершить')
 async def process_registration(
     message: Message, 
     state: FSMContext,
@@ -48,7 +47,26 @@ async def process_registration(
     await message.answer("Завершено!", reply_markup=common.show_admin_buttons())
 
 
-@admin_router.message(F.text=='Рассылка', AdminFilter())
+@admin_router.message(F.text == '!delete')
+async def handle_delete(message: Message, db: Database):
+    target_message = message.reply_to_message
+
+    if not target_message:
+        return await message.answer("Укажите сообщение")
+    
+    messages = await db.broadcast_message.get_broadcast_message_ids(target_message.message_id)
+    
+    if messages:
+        await cleaner(messages)
+
+        await message.answer(
+            f"Рассылка удалена 🧹",
+            reply_markup=common.cancel()
+        )
+    else:
+        await message.answer("Указанное сообщение не рассылался клиентам!")
+
+@admin_router.message(F.text=='Рассылка')
 async def process_registration(
     message: Message, 
     state: FSMContext,
@@ -62,14 +80,15 @@ async def process_registration(
     await state.set_state(AdminStatesGroup.broadcast)
 
 
-@admin_router.message(AdminStatesGroup.broadcast, AdminFilter())
+@admin_router.message(AdminStatesGroup.broadcast)
 async def process_registration(
     message: Message, 
     state: FSMContext,
     db: Database
 ):
+    await db.admin_message.new(message_id=message.message_id)
     count = await broadcaster(message)
     await message.answer(
-        f"Отправлено к {count} клиентам",
+        f"Отправлено к {count} клиентам 🚀",
         reply_markup=common.cancel()
     )

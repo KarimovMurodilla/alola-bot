@@ -1,11 +1,13 @@
 import asyncio
 import logging
 
+from typing import List
 from aiogram import Bot, exceptions, types
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.configuration import conf
 from src.db.database import Database
+from src.db.models.message import BroadcastMessage
 from src.db.database import create_async_engine
 from src.configuration import conf
 
@@ -42,12 +44,19 @@ async def send_message(user_id: int, message: types.Message, disable_notificatio
     :return:
     """
     try:
-        await bot.copy_message(
+        broadcast_message = await bot.copy_message(
             chat_id=user_id, 
             from_chat_id=message.from_user.id,
             message_id=message.message_id,
             disable_notification=disable_notification
         )
+        async with AsyncSession(engine) as session:
+            db = Database(session)
+            await db.broadcast_message.new(
+                broadcast_message_id=broadcast_message.message_id,
+                user_id=user_id,
+                admin_message_id=message.message_id
+            )
     except exceptions.TelegramForbiddenError:
         log.error(f"Target [ID:{user_id}]: blocked by user")
     except exceptions.TelegramNotFound:
@@ -69,6 +78,39 @@ async def send_message(user_id: int, message: types.Message, disable_notificatio
     return False
 
 
+async def delete_message(message: BroadcastMessage) -> bool:
+    """
+    Safe messages cleaner
+
+    :param message:
+    :return:
+    """
+    try:
+        await bot.delete_message(
+            chat_id=message.user_id, 
+            message_id=message.broadcast_message_id
+        )
+    except exceptions.TelegramForbiddenError:
+        log.error(f"Target [ID:{message.user_id}]: blocked by user")
+    except exceptions.TelegramNotFound:
+        log.error(f"Target [ID:{message.user_id}]: invalid user ID")
+    except exceptions.TelegramRetryAfter as e:
+        log.error(f"Target [ID:{message.user_id}]: Flood limit is exceeded. Sleep {e.retry_after} seconds.")
+        await asyncio.sleep(e.retry_after)
+        return await bot.send_message(message.user_id, message)  # Recursive call
+    except exceptions.TelegramBadRequest as tbr:
+        print(tbr)
+        log.error(f"Target [ID:{message.user_id}]: user is deactivated")
+    except exceptions.TelegramAPIError:
+        log.exception(f"Target [ID:{message.user_id}]: failed")
+    else:
+        log.info(f"Target [ID:{message.user_id}]: success")
+        return True
+    finally:
+        await bot.session.close()
+    return False
+
+
 async def broadcaster(message: types.Message) -> int:
     """
     Simple broadcaster
@@ -84,5 +126,23 @@ async def broadcaster(message: types.Message) -> int:
             await asyncio.sleep(.05)  # 20 messages per second (Limit: 30 messages per second)
     finally:
         log.info(f"{count} messages successful sent.")
+
+    return count
+
+
+async def cleaner(messages: List[BroadcastMessage]) -> int:
+    """
+    Simple broadcaster
+
+    :return: Count of messages
+    """
+    count = 0
+    try:
+        for message in messages:
+            if await delete_message(message):
+                count += 1
+            await asyncio.sleep(.05)  # 20 messages per second (Limit: 30 messages per second)
+    finally:
+        log.info(f"{count} messages successful deleted.")
 
     return count

@@ -12,6 +12,7 @@ from aiogram import types
 def show_keyboard(user_id: int):
     kb = [
         [types.KeyboardButton(text="Do'kon", web_app=types.WebAppInfo(url=f'https://alolabot-web.vercel.app/{user_id}'))],
+        [types.KeyboardButton(text="Murojaat")],
     ]
     keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
 

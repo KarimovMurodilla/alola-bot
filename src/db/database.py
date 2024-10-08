@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine as _create_async_engine
 from src.configuration import conf
 
 from .repositories import (
-    UserRepo
+    UserRepo, AdminMessageRepo, BroadcastMessageRepo
 )
 
 
@@ -28,6 +28,8 @@ class Database:
     """
 
     user: UserRepo
+    admin_message: AdminMessageRepo
+    broadcast_message: BroadcastMessageRepo
 
     session: AsyncSession
 
@@ -35,6 +37,8 @@ class Database:
         self,
         session: AsyncSession,
         user: UserRepo = None,
+        admin_message: AdminMessageRepo = None,
+        broadcast_message: BroadcastMessageRepo = None,
     ):
         """Initialize Database class.
 
@@ -42,3 +46,5 @@ class Database:
         """
         self.session = session
         self.user = user or UserRepo(session=session)
+        self.admin_message = admin_message or AdminMessageRepo(session=session)
+        self.broadcast_message = broadcast_message or BroadcastMessageRepo(session=session)

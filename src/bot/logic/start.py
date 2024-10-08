@@ -91,8 +91,8 @@ async def check_data_handler(message: types.Message):
     status = "Статус: 🟡 Проверяется\n\n"
     client_data = f"Клиент:\n- Имя: {client['first_name']}\n- Телефон: {client['phone_numbers'][0]}\n\n"
 
-    msg1 = "Ваш заказ отправлен на проверку\n\n"
-    details = "Детали заказа:\n"
+    msg1 = "Sizning buyurtmangiz tekshiruvga yuborildi\n\n"
+    details = "Buyurtma ma'lumotlari:\n"
 
     result += status
     result += client_data
@@ -123,8 +123,8 @@ async def check_data_handler(message: types.Message):
     result += f"Общее количество: {total_count}\n"
     result += f"Общая сумма: {formatted_price}"
 
-    client_result += f"Общее количество: {total_count}\n"
-    client_result += f"Общая сумма: {formatted_price}"
+    client_result += f"Umumiy soni: {total_count}\n"
+    client_result += f"Umumiy summa: {formatted_price}"
 
     await message.bot.send_message(
         chat_id=conf.CHAT_ID,  
@@ -151,3 +151,8 @@ async def order_complete(c: types.CallbackQuery):
         old_text = c.message.text
         new_text = old_text.replace('🟡 Проверяется', '🟢 Подтверждён')
         await c.message.edit_text(new_text, reply_markup=None)
+
+
+@start_router.message(F.text == 'Murojaat')
+async def feedback(message: types.Message):
+    await message.answer("Murojaat uchun: @alola_optom")
