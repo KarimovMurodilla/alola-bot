@@ -1,4 +1,4 @@
-from aiogram import F
+from aiogram import F, types
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
@@ -27,15 +27,29 @@ async def process_registration(
     state: FSMContext, 
     db: Database
 ):
-    for user in message.users_shared.users:
-        if not await db.user.get_me(user.user_id):
-            await db.user.new(
-                user_id=user.user_id,
-                user_name=user.username,
-                first_name=user.first_name,
-            )
-    await message.answer("Клиенты добавлены в базу! Теперь они могут пользоваться ботом ✅")
+    request_id = message.users_shared.request_id
 
+    if request_id == 1:
+        for user in message.users_shared.users:
+            if not await db.user.get_me(user.user_id):
+                await db.user.new(
+                    user_id=user.user_id,
+                    user_name=user.username,
+                    first_name=user.first_name,
+                )
+        await message.answer("Клиенты добавлены в базу! Теперь они могут пользоваться ботом ✅")
+
+    elif request_id == 2:
+        for user in message.users_shared.users:
+            if await db.user.get_me(user.user_id):
+                await db.user.delete_one(user_id = user.user_id)
+                await message.bot.set_chat_menu_button(user.user_id, menu_button=types.MenuButtonDefault())
+                msg = await message.bot.send_message(user.user_id, '.', reply_markup=types.ReplyKeyboardRemove())
+                await msg.delete()
+            else:
+                return await message.answer("Такого клиента на базе не существует 🤷‍♂️")
+
+        await message.answer("Клиент удален из базы. Теперь он не может пользоваться ботом ⛔️")
 
 @admin_router.message(F.text=='Завершить')
 async def process_registration(
