@@ -1,6 +1,6 @@
 """User repository file."""
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.bot.structures.role import Role
@@ -61,6 +61,17 @@ class UserRepo(Repository[User]):
         )
         users = result.all()
         return users
+    
+    async def update_user(self, user_id: int, **kwargs) -> User:
+        """Update user by id with new data."""
+        async with self.session.begin():
+            stmt = (
+                update(User)
+                .where(User.user_id == user_id)
+                .values(**kwargs)
+            )
+            await self.session.execute(stmt)
+            await self.session.commit()
     
     async def delete_one(self, **filters: dict) -> int:
         stmt = delete(User).filter_by(**filters).returning(User.user_id)

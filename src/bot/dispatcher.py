@@ -45,6 +45,8 @@ def get_dispatcher(
 
     # Register middlewares
     dp.message.middleware(DatabaseMiddleware())
+    dp.inline_query.middleware(DatabaseMiddleware())
+    dp.callback_query.middleware(DatabaseMiddleware())
     
     dp.message.middleware(TranslatorMiddleware())
     dp.callback_query.middleware(TranslatorMiddleware())

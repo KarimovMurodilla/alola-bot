@@ -11,7 +11,7 @@ from aiogram import types
 
 def show_keyboard(user_id: int):
     kb = [
-        [types.KeyboardButton(text="Do'kon", web_app=types.WebAppInfo(url=f'https://alolabot-web.vercel.app/{user_id}'))],
+        [types.KeyboardButton(text="Do'kon", web_app=types.WebAppInfo(url=f'https://alola.uzvip.uz/{user_id}'))],
         [types.KeyboardButton(text="Murojaat")],
     ]
     keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
@@ -29,7 +29,7 @@ def send_contact():
 def show_approve_btn(order_id: str, total_amount: str):
     kb = [
         [types.InlineKeyboardButton(text="❌ Отменить", callback_data='cancel'),
-        types.InlineKeyboardButton(text="✅ Подтвердить", callback_data=f"{order_id},{total_amount}")],
+        types.InlineKeyboardButton(text="✅ Подтвердить", callback_data=f"confirm,{order_id},{total_amount}")],
     ]
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
 
@@ -44,14 +44,27 @@ def show_admin_buttons():
             )
         ],
         [
-            types.KeyboardButton(text="➖ Удалить клиента", request_users=types.KeyboardButtonRequestUsers(
-                    request_id=2, user_is_bot=False
-                )
-            )
+            types.KeyboardButton(text="➖ Удалить клиента")
         ],
         [types.KeyboardButton(text="Рассылка")],
     ]
     keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+
+    return keyboard
+
+def show_users_inline():
+    kb = [
+        [types.InlineKeyboardButton(text="Клиенты", switch_inline_query_current_chat='clients')]
+    ]
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
+
+    return keyboard
+
+def delete(user_id: int):
+    kb = [
+        [types.InlineKeyboardButton(text="Удалить", callback_data=f'delete,{user_id}')]
+    ]
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
 
     return keyboard
 

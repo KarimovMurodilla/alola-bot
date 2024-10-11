@@ -17,24 +17,22 @@ class User(Base):
     user_id: Mapped[int] = mapped_column(
         sa.BigInteger, unique=True, nullable=False, primary_key=True
     )
-    """ Telegram user id """
     user_name: Mapped[str] = mapped_column(
         sa.Text, unique=False, nullable=True
     )
-    """ Telegram user name """
     first_name: Mapped[str] = mapped_column(
         sa.Text, unique=False, nullable=True
     )
-    """ Telegram profile first name """
     second_name: Mapped[str] = mapped_column(
         sa.Text, unique=False, nullable=True
     )
+    phone_number: Mapped[str] = mapped_column(
+        sa.Text, unique=False, nullable=True
+    )
     language_code: Mapped[Locales] = mapped_column(sa.Enum(Locales), unique=False, nullable=True)
-    """ Telegram profile second name """
     is_premium: Mapped[bool] = mapped_column(
         sa.Boolean, unique=False, nullable=False
     )
-    """ Telegram user premium status """
     role: Mapped[Role] = mapped_column(sa.Enum(Role), default=Role.USER)
     created_at: Mapped[Optional[Annotated[datetime.datetime, mapped_column(nullable=False, default=datetime.datetime.utcnow)]]]
 

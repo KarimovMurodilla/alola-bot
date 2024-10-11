@@ -50,7 +50,7 @@ async def start_handler(message: types.Message, state: FSMContext):
 
 
 @start_router.message(F.contact, RegisterGroup.phone_number)
-async def get_phone_number(message: types.Message, state: FSMContext):
+async def get_phone_number(message: types.Message, state: FSMContext, db: Database):
     msg = await message.answer('.', reply_markup=types.ReplyKeyboardRemove())
     await msg.delete()
 
@@ -61,6 +61,12 @@ async def get_phone_number(message: types.Message, state: FSMContext):
         first_name=message.from_user.first_name,
         last_name=message.from_user.last_name,
         phone_number=message.contact.phone_number
+    )
+
+    await db.user.update_user(
+        user_id=message.from_user.id,
+        phone_number=message.contact.phone_number,
+        second_name=message.from_user.last_name
     )
 
     await message.answer(
@@ -130,27 +136,8 @@ async def check_data_handler(message: types.Message):
         chat_id=conf.CHAT_ID,  
         text=result,
         reply_markup=common.show_approve_btn(order_id=data['order_id'], total_amount=total_amount)
-    ) # Gruppaga boradigani
-    await message.answer(client_result) # Klientga boradigani
-    
-
-@start_router.callback_query(ClientFilter())
-async def order_complete(c: types.CallbackQuery):    
-    if c.data == 'cancel':
-        old_text = c.message.text
-        new_text = old_text.replace('🟡 Проверяется', '🔴 Отменён')
-        await c.message.edit_text(new_text, reply_markup=None)
-    
-    else:
-        data = c.data.split(',')
-        order_id = data[0]
-        total_amount = int(data[1])
-
-        billz = BillzAPI()
-        # await billz.make_payment(order_id, total_amount)
-        old_text = c.message.text
-        new_text = old_text.replace('🟡 Проверяется', '🟢 Подтверждён')
-        await c.message.edit_text(new_text, reply_markup=None)
+    )
+    await message.answer(client_result)
 
 
 @start_router.message(F.text == 'Murojaat')

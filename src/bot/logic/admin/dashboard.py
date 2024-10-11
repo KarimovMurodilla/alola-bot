@@ -1,10 +1,13 @@
-from aiogram import F, types
+from aiogram import F, types, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
+from src.bot.utils.billz_api import BillzAPI
 from src.db.database import Database
 from src.bot.structures.keyboards import common
 from src.bot.structures.fsm.admin_states import AdminStatesGroup
+from src.configuration import conf
+
 from .router import admin_router
 from .broadcast import broadcaster, cleaner
 
@@ -29,27 +32,15 @@ async def process_registration(
 ):
     request_id = message.users_shared.request_id
 
-    if request_id == 1:
-        for user in message.users_shared.users:
-            if not await db.user.get_me(user.user_id):
-                await db.user.new(
-                    user_id=user.user_id,
-                    user_name=user.username,
-                    first_name=user.first_name,
-                )
-        await message.answer("Клиенты добавлены в базу! Теперь они могут пользоваться ботом ✅")
+    for user in message.users_shared.users:
+        if not await db.user.get_me(user.user_id):
+            await db.user.new(
+                user_id=user.user_id,
+                user_name=user.username,
+                first_name=user.first_name,
+            )
+    await message.answer("Клиенты добавлены в базу! Теперь они могут пользоваться ботом ✅")
 
-    elif request_id == 2:
-        for user in message.users_shared.users:
-            if await db.user.get_me(user.user_id):
-                await db.user.delete_one(user_id = user.user_id)
-                await message.bot.set_chat_menu_button(user.user_id, menu_button=types.MenuButtonDefault())
-                msg = await message.bot.send_message(user.user_id, '.', reply_markup=types.ReplyKeyboardRemove())
-                await msg.delete()
-            else:
-                return await message.answer("Такого клиента на базе не существует 🤷‍♂️")
-
-        await message.answer("Клиент удален из базы. Теперь он не может пользоваться ботом ⛔️")
 
 @admin_router.message(F.text=='Завершить')
 async def process_registration(
@@ -80,6 +71,7 @@ async def handle_delete(message: Message, db: Database):
     else:
         await message.answer("Указанное сообщение не рассылался клиентам!")
 
+
 @admin_router.message(F.text=='Рассылка')
 async def process_registration(
     message: Message, 
@@ -106,3 +98,82 @@ async def process_registration(
         f"Отправлено к {count} клиентам 🚀",
         reply_markup=common.cancel()
     )
+
+
+@admin_router.message(F.text == '➖ Удалить клиента')
+async def delete_client_cmd(
+    message: Message
+):
+    await message.answer(
+        "Нажав на кнопку, выберите клиента",
+        reply_markup=common.show_users_inline()
+    )
+    
+
+@admin_router.inline_query(F.query == 'clients')
+async def show_clients(inline_query: types.InlineQuery, db: Database):
+    clients = await db.user.get_all_users()
+    billz = BillzAPI()
+    
+    results = []
+    for client in clients:
+        phone_number = client.phone_number
+        if not phone_number:
+            user: dict = await billz.get_user(client.user_id)
+            phone_number = user['phone_numbers'][0]
+
+        results.append(types.InlineQueryResultArticle(
+            id=str(client.user_id),
+            title=f"{client.first_name} - {phone_number}",
+            description=f"@{client.user_name}",
+            input_message_content=types.InputTextMessageContent(
+                message_text=f"Данные о клиенте\n\n"
+                             f"- Имя: {client.first_name}\n"
+                             f"- Телефон: {phone_number}\n"
+                             f"- Телеграм аккаунт: @{client.user_name}",
+                parse_mode=None
+            ),
+            reply_markup=common.delete(client.user_id)
+        ))
+
+    await inline_query.answer(results, is_personal=True)
+
+
+@admin_router.callback_query(F.data == 'cancel')
+async def order_cancel(c: types.CallbackQuery):    
+    # if c.data == 'cancel':
+    old_text = c.message.text
+    new_text = old_text.replace('🟡 Проверяется', '🔴 Отменён')
+    await c.message.edit_text(new_text, reply_markup=None)
+    
+
+@admin_router.callback_query(F.data.contains('confirm'))
+async def order_confirm(c: types.CallbackQuery): 
+    data = c.data.split(',')
+    order_id = data[1]
+    total_amount = int(data[2])
+
+    billz = BillzAPI()
+    # await billz.make_payment(order_id, total_amount)
+    old_text = c.message.text
+    new_text = old_text.replace('🟡 Проверяется', '🟢 Подтверждён')
+    await c.message.edit_text(new_text, reply_markup=None)
+
+
+@admin_router.callback_query(F.data.contains('delete'))
+async def order_confirm(c: types.CallbackQuery, db: Database): 
+    data = c.data.split(',')
+    user_id = int(data[1])
+
+    bot = Bot(token=conf.bot.token)
+
+    if await db.user.get_me(user_id):
+        await db.user.delete_one(user_id = user_id)
+        await bot.set_chat_menu_button(user_id, menu_button=types.MenuButtonDefault())
+        msg = await bot.send_message(user_id, '.', reply_markup=types.ReplyKeyboardRemove())
+        await msg.delete()
+    else:
+        return await bot.send_message(c.from_user.id, "Такого клиента на базе не существует 🤷‍♂️")
+
+    await bot.send_message(c.from_user.id, "Клиент удалён из базы. Теперь он не может пользоваться ботом ⛔️")
+    await bot.session.close()
