@@ -158,7 +158,8 @@ async def order_confirm(c: types.CallbackQuery):
 
 
 @admin_router.callback_query(F.data.contains('delete'))
-async def order_confirm(c: types.CallbackQuery, db: Database): 
+async def order_confirm(c: types.CallbackQuery, db: Database):
+    await c.answer()
     data = c.data.split(',')
     user_id = int(data[1])
 
