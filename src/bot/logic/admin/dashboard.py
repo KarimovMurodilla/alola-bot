@@ -112,6 +112,9 @@ async def delete_client_cmd(
 
 @admin_router.inline_query(F.query == 'clients')
 async def show_clients(inline_query: types.InlineQuery, db: Database):
+    if inline_query.from_user.id not in conf.ADMINS:
+        return
+    
     clients = await db.user.get_all_users()
     billz = BillzAPI()
     
@@ -120,7 +123,7 @@ async def show_clients(inline_query: types.InlineQuery, db: Database):
         phone_number = client.phone_number
         if not phone_number:
             user: dict = await billz.get_user(client.user_id)
-            phone_number = user['phone_numbers'][0]
+            client.phone_number = user['phone_numbers'][0]
 
         results.append(types.InlineQueryResultArticle(
             id=str(client.user_id),
@@ -135,8 +138,10 @@ async def show_clients(inline_query: types.InlineQuery, db: Database):
             ),
             reply_markup=common.delete(client.user_id)
         ))
+    
+    await db.user.session.commit()
 
-    await inline_query.answer(results, is_personal=True)
+    await inline_query.answer(results, is_personal=True, cache_time=0)
 
 
 @admin_router.callback_query(F.data == 'cancel')

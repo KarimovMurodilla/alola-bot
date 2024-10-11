@@ -44,7 +44,7 @@ async def start_handler(message: types.Message, state: FSMContext):
         await message.bot.set_chat_menu_button(
             chat_id=message.from_user.id, 
             menu_button=types.MenuButtonWebApp(text="Do'kon", web_app=types.WebAppInfo(
-                url=f'https://alolabot-web.vercel.app/{message.from_user.id}'
+                url=f'https://alola.uzvip.uz/{message.from_user.id}'
             ))
         )
 
