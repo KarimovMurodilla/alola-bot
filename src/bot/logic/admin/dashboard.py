@@ -116,30 +116,22 @@ async def show_clients(inline_query: types.InlineQuery, db: Database):
         return
     
     clients = await db.user.get_all_users()
-    billz = BillzAPI()
     
     results = []
     for client in clients:
-        phone_number = client.phone_number
-        if not phone_number:
-            user: dict = await billz.get_user(client.user_id)
-            client.phone_number = user['phone_numbers'][0]
-
         results.append(types.InlineQueryResultArticle(
             id=str(client.user_id),
-            title=f"{client.first_name} - {phone_number}",
+            title=f"{client.first_name} - {client.phone_number}",
             description=f"@{client.user_name}",
             input_message_content=types.InputTextMessageContent(
                 message_text=f"Данные о клиенте\n\n"
                              f"- Имя: {client.first_name}\n"
-                             f"- Телефон: {phone_number}\n"
+                             f"- Телефон: {client.phone_number}\n"
                              f"- Телеграм аккаунт: @{client.user_name}",
                 parse_mode=None
             ),
             reply_markup=common.delete(client.user_id)
         ))
-    
-    await db.user.session.commit()
 
     await inline_query.answer(results, is_personal=True, cache_time=0)
 
