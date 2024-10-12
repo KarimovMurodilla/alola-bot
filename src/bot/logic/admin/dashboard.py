@@ -151,7 +151,8 @@ async def order_confirm(c: types.CallbackQuery):
     total_amount = int(data[2])
 
     billz = BillzAPI()
-    # await billz.make_payment(order_id, total_amount)
+    await billz.make_payment(order_id, total_amount)
+    
     old_text = c.message.text
     new_text = old_text.replace('🟡 Проверяется', '🟢 Подтверждён')
     await c.message.edit_text(new_text, reply_markup=None)
