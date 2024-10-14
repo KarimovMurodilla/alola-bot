@@ -138,11 +138,10 @@ async def show_clients(inline_query: types.InlineQuery, db: Database):
 
 @admin_router.callback_query(F.data == 'cancel')
 async def order_cancel(c: types.CallbackQuery):    
-    # if c.data == 'cancel':
     old_text = c.message.text
     new_text = old_text.replace('🟡 Проверяется', '🔴 Отменён')
     await c.message.edit_text(new_text, reply_markup=None)
-    
+
 
 @admin_router.callback_query(F.data.contains('confirm'))
 async def order_confirm(c: types.CallbackQuery): 

@@ -39,6 +39,11 @@ class BillzAPI:
             "secret_token": conf.BILLZ_SECRET_KEY
         }
 
+        async with aiohttp.ClientSession(headers=self.headers) as session:
+            async with session.post(url, json=payload) as response:
+                data = await response.json()
+                return data
+
         response: ClientResponse = await self.post(url, payload)
         data: dict = await response.json()
         access_token = data.get('data').get('access_token')
