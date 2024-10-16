@@ -49,6 +49,7 @@ idna = "^3.7"
 importlib_metadata = "^8.0.0"
 itsdangerous = "^2.2.0"
 redis = "^4.4.2"
+aioredis = "^2.0.1"
 
 [tool.poetry.group.dev]
 optional=true

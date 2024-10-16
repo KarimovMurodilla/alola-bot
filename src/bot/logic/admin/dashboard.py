@@ -144,11 +144,15 @@ async def order_cancel(c: types.CallbackQuery):
 
 
 @admin_router.callback_query(F.data.contains('confirm'))
-async def order_confirm(c: types.CallbackQuery): 
+async def order_confirm(c: types.CallbackQuery):
+    print("It's working")
     data = c.data.split(',')
     order_id = data[1]
     total_amount = int(data[2])
 
+    print("order_id:", order_id)
+    print("total_amount:", total_amount)
+    
     billz = BillzAPI()
     await billz.make_payment(order_id, total_amount)
     
