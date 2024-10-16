@@ -23,6 +23,9 @@ class Client:
     
     async def get_access_token(self):
         access_token = await self.cache.get("ACCESS_TOKEN")
+        if not access_token:
+            await self.login()
+            return await self.get_access_token()
         return access_token.decode()
     
     async def login(self):
